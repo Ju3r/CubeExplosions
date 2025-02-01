@@ -41,7 +41,7 @@ public class Cube : MonoBehaviour
 
     private int GetRandomObjectsCount()
     {
-        return Random.Range(_startRandomNumber, _endRandomNumber);
+        return Random.Range(_startRandomNumber, _endRandomNumber + 1);
     }
 
     private bool IsCreateSuccessful()
