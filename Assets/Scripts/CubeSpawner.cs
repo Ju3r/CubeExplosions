@@ -1,42 +1,36 @@
-using System.Collections.Generic;
 using UnityEngine;
 
-public class Cube : MonoBehaviour
+public class CubeSpawner : MonoBehaviour
 {
-    private float _chanceToCreate = 100f;
     private float _divisionNumber = 2.0f;
-
-    private int _startRandomNumber = 2;
-    private int _endRandomNumber = 6;
 
     private int _startChanceNumber = 1;
     private int _endChanceNumber = 100;
 
-    private float _explosionRadius = 10;
-    private float _explosionForce = 400;
+    private int _startRandomNumber = 2;
+    private int _endRandomNumber = 6;
 
-    private void OnMouseUpAsButton()
+    public void Spawn(Cube cube)
     {
-        if (IsCreateSuccessful())
+        if (IsCreateSuccessful(cube))
         {
-            GameObject gameObjectToCreate = Modify();
-            int count = GetRandomObjectsCount();
+            GameObject gameObjectToCreate = Modify(cube);
 
-            SpawnObjects(gameObjectToCreate, count);
+            for (int i = 0; i < GetRandomObjectsCount(); i++)
+            {
+                GameObject newCube = Instantiate(gameObjectToCreate, cube.transform.position, Quaternion.identity);
+                Cube newCubeScript = newCube.GetComponent<Cube>();
+                newCubeScript.SetChanceToCreate(cube._chanceToCreate / _divisionNumber);
+            }
         }
-
-        Explode();
-        DestroyObject();
     }
 
-    private void SpawnObjects(GameObject gameObjectToCreate, int countOfObjects)
+    private bool IsCreateSuccessful(Cube cube)
     {
-        for (int i = 0; i < countOfObjects; i++)
-        {
-            GameObject newCube = Instantiate(gameObjectToCreate, transform.position, Quaternion.identity);
-            Cube newCubeScript = newCube.GetComponent<Cube>();
-            newCubeScript._chanceToCreate = _chanceToCreate / _divisionNumber;
-        }
+        if (Random.Range(_startChanceNumber, _endChanceNumber + 1) <= cube._chanceToCreate)
+            return true;
+
+        return false;
     }
 
     private int GetRandomObjectsCount()
@@ -44,55 +38,23 @@ public class Cube : MonoBehaviour
         return Random.Range(_startRandomNumber, _endRandomNumber + 1);
     }
 
-    private bool IsCreateSuccessful()
+    private GameObject Modify(Cube cube)
     {
-        if (Random.Range(_startChanceNumber, _endChanceNumber + 1) <= _chanceToCreate)
-            return true;
-
-        return false;
-    }
-
-    private void DestroyObject()
-    {
-        Destroy(gameObject);
-    }
-
-    private GameObject Modify()
-    {
-        Vector3 scale = transform.localScale;
+        Vector3 scale = cube.transform.localScale;
 
         float minRandomColorNumber = 0f;
         float maxRandomColorNumber = 1f;
 
         Color randomColor = new Color(
-                                Random.Range(minRandomColorNumber, maxRandomColorNumber), 
+                                Random.Range(minRandomColorNumber, maxRandomColorNumber),
                                 Random.Range(minRandomColorNumber, maxRandomColorNumber),
                                 Random.Range(minRandomColorNumber, maxRandomColorNumber)
                                 );
 
-        GameObject gameObjectToCreate = gameObject;
+        GameObject gameObjectToCreate = cube.gameObject;
         gameObjectToCreate.transform.localScale = scale / _divisionNumber;
         gameObjectToCreate.GetComponent<MeshRenderer>().material.color = randomColor;
 
         return gameObjectToCreate;
-    }
-    
-    private void Explode()
-    {
-        foreach (var explodableObject in GetExplodableObjects())
-            explodableObject.AddExplosionForce(_explosionForce, transform.position, _explosionRadius);
-    }
-
-    private List<Rigidbody> GetExplodableObjects()
-    {
-        Collider[] hits = Physics.OverlapSphere(transform.position, _explosionRadius);
-
-        List<Rigidbody> cubes = new();
-
-        foreach (Collider hit in hits)
-            if (hit.attachedRigidbody != null)
-                cubes.Add(hit.attachedRigidbody);
-
-        return cubes;
     }
 }
