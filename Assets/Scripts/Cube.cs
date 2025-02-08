@@ -1,36 +1,45 @@
+using System;
 using UnityEngine;
 
 public class Cube : MonoBehaviour
 {
-    [SerializeField] private CubeSpawner _spawner;
-    [SerializeField] private CubeExploder _exploder;
+    public event Action<Cube> OnCubeClicked;
 
-    public float _chanceToCreate { get; private set; } = 100f;
+    private MeshRenderer _meshRenderer;
+    private Rigidbody _rigidbody;
+
+    public float ChanceToCreate { get; private set; } = 100f;
+
+    private void Awake()
+    {
+        _meshRenderer = GetComponent<MeshRenderer>();
+        _rigidbody = GetComponent<Rigidbody>();
+    }
 
     private void OnMouseUpAsButton()
     {
-        _spawner.Spawn(this);
-
-        //if (IsCreateSuccessful())
-        //{
-        //    GameObject gameObjectToCreate = Modify();
-        //    int count = GetRandomObjectsCount();
-
-        //    SpawnObjects(gameObjectToCreate, count);
-        //}
-
-        _exploder.Explode(this);
+        OnCubeClicked?.Invoke(this);
         DestroyObject();
+    }
+
+    public void SetColor(Color color)
+    {
+        if (_meshRenderer != null)
+            _meshRenderer.material.color = color;
     }
 
     public void SetChanceToCreate(float chance)
     {
-        _chanceToCreate = chance;
+        ChanceToCreate = chance;
+    }
+
+    public Rigidbody GetRigidbody()
+    {
+        return _rigidbody;
     }
 
     private void DestroyObject()
     {
         Destroy(gameObject);
     }
-
 }
